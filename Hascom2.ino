@@ -70,7 +70,13 @@ byte menu=1; // Menu Variable.
 
 // ende Variablendefintition
 
-
+byte getlength(int N){// überprüfe die anzahl der Ziffern
+  if(N<-9) return 54;
+  else if(N<0)return 36;
+  else if(N<10)return 18;
+  else if(N<100)return 36;
+  else return 54;
+  }
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
   if ((timesincerequest+2000)<millis()){// schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
    T2=sensors.getTempCByIndex(0);
@@ -126,6 +132,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.setCursor(116,150);
   tft.setTextColor(RED, BLACK);
   tft.print(temperature);
+  tft.fillRect((116+getlength(temperature)),165,30,14,BLACK);
   tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print(char(0xF7));
@@ -133,6 +140,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.setTextSize(3);
   tft.setTextColor(BLUE, BLACK);
   tft.print(humidity);
+  tft.fillRect((150+getlength(temperature)+getlength(humidity)),166,25,13,BLACK);
   tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("%");
@@ -144,15 +152,16 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(" Aussen: ");}
   tft.setTextSize(3);
   tft.setCursor(152,180);
-  tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C      ");
+  tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C   ");
+  tft.fillRect((152+getlength(T1)),194,40,15,BLACK);
   if ((first)||(gminute!=ominute)){
   tft.setTextSize(3);
   tft.setCursor(-10,210);
   tft.print(" Motor:  ");}
   tft.setTextSize(3);
   tft.setCursor(152,210);
-  tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C      ");
- 
+  tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C   ");
+  tft.fillRect((152+getlength(T2)),224,40,15,BLACK);
 
   tft.setCursor(140,120);
   tft.setTextSize(3);
@@ -202,26 +211,27 @@ String monat(byte t){//konvertiert eine zahl in einen String
   }  
 }
 void wochentag(){//gibt einen String auf dem TFT aus
+  getbatday();
   switch (wtag) {
-    case 0:  
+    case 1:  
       tft.print("Mon");
     break;
-    case 1:  
+    case 2:  
       tft.print("Diens");
     break;
-    case 2:
+    case 3:
       tft.print("Mittwoch");
     break;   
-    case 3:
+    case 4:
       tft.print("Donners");
     break;   
-    case 4:
+    case 5:
       tft.print("Frei");
     break;   
-    case 5:
+    case 6:
       tft.print("Sams");
     break;
-    case 6:
+    case 0:
       tft.print("Sonn");
     break;
   }
