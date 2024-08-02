@@ -111,7 +111,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(" "); 
   if (gtag < 10) tft.print("0"); tft.print(gtag); 
   tft.print("."); 
-  tft.print(monat(gmonat));tft.print("0");space(5); 
+  monat(gmonat);
   tft.setCursor(-10, 120);
   tft.print(" "); 
   if (gjahr < 10) tft.print("0"); tft.print(gjahr);
@@ -162,40 +162,42 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
 String monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 1:
-      return "Januar";
+      tft.print("Januar");
     break;
     case 2:
-      return "Februar";
+      tft.print("Februar");
     break;
     case 3:
-      return "Maerz";
+      tft.print("Ma");
+      tft.print("er");
+      tft.print("z");
     break;
     case 4:
-      return "0";
+      tft.print("April");
     break;
     case 5:
-      return "Mai";
+      tft.print("Mai");
     break;
     case 6:
-      return "Juni";
+      tft.print("Juni");
     break;
     case 7:
-      return "Juli";
+      tft.print("Juli");
     break;
     case 8:
-      return "August";
+      tft.print("August");
     break;
     case 9:
-      return "September";
+      tft.print("September");
     break;
     case 10:
-      return "Oktober";
+      tft.print("Oktober");
     break;
     case 11:
-      return "November";
+      tft.print("November");
     break;
     case 12:
-      return "Dezember";
+      tft.print("Dezember");
     break;
   }  
 }
@@ -344,7 +346,6 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   ss.begin(GPSBaud);
   sensors.begin();
   sensors.requestTemperatures();
-  refresh();
   
 
 }
@@ -564,7 +565,7 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
           
             if (omenu==1)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 10);
-            if (Sommerzeit) tft.print(" Sommerzeit");   else tft.print(" Winterzeit");
+            if (Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit ");
             if (omenu==2)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 40);
             tft.print(" Helligk.-Tag  :");tft.print(Daylight);tft.print("  ");
