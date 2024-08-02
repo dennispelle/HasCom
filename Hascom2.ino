@@ -26,11 +26,11 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 unsigned long timesincerequest=0;
 float T1,T2,Ta1,Ta2,T1m,T2m;
-#include <SimpleDHT.h>
 byte temperature = 0;
 byte humidity = 0; 
 int err;  
-SimpleDHT11 dht11(5);
+#include <dhtnew.h>
+DHTNEW mySensor(5);
 /* RTC MODUL XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx*/
 #include <Wire.h>
 #include <TimeLib.h>
@@ -70,7 +70,7 @@ byte menu=1; // Menu Variable.
 
 // ende Variablendefintition
 
-byte getlength(int N){// überprüfe die anzahl der Ziffern
+byte getlength(int N){// überprüfe die anzahl der Ziffern und wandle sie in Pixelweite
   if(N<-99)return 72;
   else if(N<-9) return 54;
   else if(N<0)return 36;
@@ -81,9 +81,11 @@ byte getlength(int N){// überprüfe die anzahl der Ziffern
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
   if ((timesincerequest+2000)<millis()){// schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
    T2=sensors.getTempCByIndex(0);
-   T1=sensors.getTempCByIndex(1);    
-   err = dht11.read(&temperature, &humidity, NULL);
+   T1=sensors.getTempCByIndex(1); 
+   temperature = mySensor.getTemperature();
+   humidity = mySensor.getHumidity();
    sensors.requestTemperatures();
+   mySensor.read();
    timesincerequest=millis();}
   }
 void space(byte n){
@@ -98,67 +100,72 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
   if ((first)||(gminute!=ominute)){// schau, ob das Bild aktualisiert werden muss
       ominute=gminute;
-  // Uhrzeit, Stunde:Minute:Sekunde
-  tft.setCursor(-30, 5);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(7);
-  tft.print(" ");
-  if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
-  tft.print(":"); 
-  if (gminute < 10) tft.print("0"); tft.print(gminute);
-  //tft.print(":"); 
-  //if (gsekunde < 10) tft.print("0"); tft.print(gsekunde);
-  // Wochentag Mittig
-  tft.setTextSize(3 );
-  tft.setCursor(-10,60);
-  tft.print(" ");
-  wochentag();
+  // Uhrzeit, Stunde:Minute
+        tft.setCursor(-30, 5);
+        tft.setTextColor(WHITE, BLACK);
+        tft.setTextSize(7);
+        tft.print(" ");
+        if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
+        tft.print(":"); 
+        if (gminute < 10) tft.print("0"); tft.print(gminute);
+        // Wochentag Mittig
+        tft.setTextSize(3 );
+        tft.setCursor(-10,60);
+        tft.print(" ");
+        wochentag();
   
-  tft.setCursor(-10, 90);
-  tft.print(" "); 
-  if (gtag < 10) tft.print("0"); tft.print(gtag); 
-  tft.print("."); 
-  monat(gmonat);
-  tft.setCursor(-10, 120);
-  tft.print(" "); 
-  if (gjahr < 10) tft.print("0"); tft.print(gjahr);
-  }
+        tft.setCursor(-10, 90);
+        tft.print(" "); 
+        if (gtag < 10) tft.print("0"); tft.print(gtag); 
+        tft.print("."); 
+        monat(gmonat);
+        tft.setCursor(-10, 120);
+        tft.print(" "); 
+        if (gjahr < 10) tft.print("0"); tft.print(gjahr);
+        }
   //tft.setCursor(150,60);tft.print(millis()%10);
 // Zeige das Raumklima an
   getTemp(); //Hole die Temperatur und Luftfeucht vom DHT
   if ((first)||(gminute!=ominute)){
-  tft.setCursor(-10,150);
-  tft.setTextColor(WHITE, BLACK);
-  tft.print(" Innen:");}
-  tft.setCursor(116,150);
-  tft.setTextColor(RED, BLACK);
-  tft.print(temperature);
-  tft.fillRect((116+getlength(temperature)),165,30,14,BLACK);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print(char(0xF7));
-  tft.print("C ");
-  tft.setTextSize(3);
-  tft.setTextColor(BLUE, BLACK);
-  tft.print(humidity);
-  tft.fillRect((150+getlength(temperature)+getlength(humidity)),166,25,13,BLACK);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("%");
+        tft.setCursor(-10,150);
+        tft.setTextColor(WHITE, BLACK);
+        tft.print(" Innen:");
+        }
+        
+        tft.setCursor(116,150);
+        tft.setTextColor(RED, BLACK);
+        tft.print(temperature);
+        tft.fillRect((116+getlength(temperature)),165,30,14,BLACK);
+        tft.setTextColor(WHITE, BLACK);
+        tft.setTextSize(2);
+        tft.print(char(0xF7));
+        tft.print("C ");
+        tft.setTextSize(3);
+        tft.setTextColor(BLUE, BLACK);
+        tft.print(humidity);
+        tft.fillRect((150+getlength(temperature)+getlength(humidity)),166,25,13,BLACK);
+        tft.setTextColor(WHITE, BLACK);
+        tft.setTextSize(2);
+        tft.print("%");
 
 // Zeige Temperatursensoren an
   if ((first)||(gminute!=ominute)){
-  tft.setCursor(-10,180);
-  tft.setTextSize(3);
-  tft.print(" Aussen: ");}
+    tft.setCursor(-10,180);
+    tft.setTextSize(3);
+    tft.print(" Aussen: ");
+  }
+  
   tft.setTextSize(3);
   tft.setCursor(152,180);
   tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C   ");
   tft.fillRect((152+getlength(T1)),194,40,15,BLACK);
+  
   if ((first)||(gminute!=ominute)){
-  tft.setTextSize(3);
-  tft.setCursor(-10,210);
-  tft.print(" Motor:  ");}
+    tft.setTextSize(3);
+    tft.setCursor(-10,210);
+    tft.print(" Motor:  ");
+  }
+  
   tft.setTextSize(3);
   tft.setCursor(152,210);
   tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C   ");
@@ -366,28 +373,131 @@ void refresh(){// Bildschirm löschen
   first=1;
   px=1;
   }
+// Globale Variablen fpr GPSstatus
+byte satelitenanzahl;
+float latitude, longitude;
+int hoehenmeter,degree,gpsjahr;
+byte gpstag,gpsmonat,gpsstunde,gpsminute,gpssekunde,gpsspeed;
+// Globale Variablen fpr GPSstatus
 void gpsstatus(){// Funktionsbildschirm für GPS, zeigt Satelitenanzahl, Koordinaten, Geschwindigkeit usw an
+  
    while (ss.available() > 0)
-    if (gps.encode(ss.read())); 
+    if (gps.encode(ss.read()));  // hole die daten vom GPS sensor
+  
   tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(3);
-  tft.setCursor(-10, 5);
-  tft.print(" Sateliten:"); tft.print(gps.satellites.value());tft.print(" ");
-  tft.setCursor(-10, 30);
-  tft.print(" B:"); tft.print(gps.location.lat(), 6);tft.print("  ");
-  tft.setCursor(-10, 55);
-  tft.print(" L:"); tft.print(gps.location.lng(), 6);tft.print("  "); 
-  tft.setCursor(-10, 80);
-  tft.print(" H:"); tft.print(gps.altitude.meters(),0); tft.print("m    ");
-  tft.setCursor(-10, 130);
-  tft.print(" D:"); tft.print(gps.date.day()); tft.print(".");  tft.print(gps.date.month());tft.print("."); tft.print(gps.date.year());
-  tft.setCursor(-10, 105);
-  tft.print(" C:");  tft.print(gps.time.hour()); tft.print(":"); tft.print(gps.time.minute());tft.print(":"); tft.print(gps.time.second());tft.print(" ");
-  tft.setCursor(-10, 155);
-  tft.print(" S:"); tft.print(gps.speed.kmph(),1);tft.print("Km/h   ");
-  tft.setCursor(-10, 180);
-  tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));space(3);
+  
+  if(first){
+    printSatAnz();
+    printLatitude();
+    printLongitude();
+    printHoehenmeter();
+    printGpsDatum();
+    printGpsTime();
+    printGpsGeschwindigkeit();
+    printGpsRichtung();
+    first=0;   
   }
+  if (satelitenanzahl!=gps.satellites.value())  printSatAnz();
+  if (latitude!=gps.location.lat())             printLatitude();
+  if (longitude!=gps.location.lng())            printLongitude();
+  if (hoehenmeter!=gps.altitude.meters())       printHoehenmeter();
+
+  if ((gpstag!=gps.date.day())||(gpsmonat!=gps.date.month())||(gpsjahr!=gps.date.year()))             printGpsDatum(); 
+  if ((gpssekunde!=gps.time.second())||(gpsminute!=gps.time.minute())||(gpsstunde!=gps.time.hour()))  printGpsTime();
+  
+  if (gpsspeed!=gps.speed.kmph())               printGpsGeschwindigkeit();
+  if (degree!=gps.course.deg())                 printGpsRichtung();
+  }
+void printSatAnz(){
+    satelitenanzahl=gps.satellites.value();
+    tft.setCursor(-10, 5);
+    tft.print(" Sateliten:");
+    if(satelitenanzahl<10) tft.print(" ");
+    tft.print(satelitenanzahl);
+    tft.print(" ");
+  }
+void printLatitude(){
+    latitude=gps.location.lat(); 
+    tft.setCursor(-10, 30);
+    tft.print(" B:"); 
+    if (latitude<100)tft.print(" ");
+    if (latitude<10)tft.print(" "); 
+    tft.print(latitude, 6);
+  }
+void printLongitude(){
+    longitude=gps.location.lng();
+    tft.setCursor(-10, 55);
+    tft.print(" L:"); 
+    if (longitude<100)tft.print(" ");
+    if (longitude<10)tft.print(" "); 
+    tft.print(longitude, 6);
+  }
+void printHoehenmeter(){
+    hoehenmeter=gps.altitude.meters();
+    tft.setCursor(-10, 80);
+    tft.print(" H:");
+    if (hoehenmeter<100)tft.print(" "); 
+    if (hoehenmeter<100)tft.print(" ");
+    if (hoehenmeter<10)tft.print(" "); 
+    tft.print(hoehenmeter,0); 
+    tft.print("m");space(1);
+  }
+void printGpsDatum(){
+    gpstag=gps.date.day(); 
+    gpsmonat=gps.date.month(); 
+    gpsjahr=gps.date.year();
+    
+    tft.setCursor(-10, 130);
+    tft.print(" D:"); 
+    if (gpstag<10){tft.print("0");}
+    tft.print(gpstag); 
+    tft.print(".");
+    if (gpsmonat<10){tft.print("0");}  
+    tft.print(gpsmonat);tft.print("."); 
+    tft.print(gpsjahr);
+  }
+void printGpsTime(){
+    gpsstunde=gps.time.hour();  
+    gpsminute=gps.time.minute();  
+    gpssekunde=gps.time.second();
+    tft.setCursor(-10, 105);
+    
+    tft.print(" C:");
+    
+    if (gpsstunde<10){tft.print("0");}  
+    tft.print(gpsstunde); 
+    
+    tft.print(":");
+    
+    if (gpsminute<10){tft.print("0");} 
+    tft.print(gpsminute);
+    tft.print(":");
+    
+    if (gpssekunde<10){tft.print("0");} 
+    tft.print(gpssekunde);
+  }
+void printGpsGeschwindigkeit(){
+    gpsspeed=gps.speed.kmph();
+    
+    tft.setCursor(-10, 155);
+    
+    tft.print(" S:");
+    if (gpsspeed<100){tft.print(" ");}
+    if (gpsspeed<10){tft.print(" ");} 
+    tft.print(gpsspeed,1);tft.print("Km/h");
+  }
+void printGpsRichtung(){
+    degree=gps.course.deg();
+    if (degree<0)degree+=360;
+    tft.setCursor(-10, 180);
+    
+    tft.print(" R: ");
+    if (degree<100){tft.print(" ");}
+    if (degree<10){tft.print(" ");} 
+    tft.print(degree);
+    tft.print(char(0xF7));
+  }  
 void voltstatus(){// Oszifunktion :)
   
 
