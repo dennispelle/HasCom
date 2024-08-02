@@ -73,8 +73,8 @@ byte menu=1; // Menu Variable.
 
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
   if ((timesincerequest+2000)<millis()){// schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
-   T1=sensors.getTempCByIndex(0);
-   T2=sensors.getTempCByIndex(1);    
+   T2=sensors.getTempCByIndex(0);
+   T1=sensors.getTempCByIndex(1);    
    err = dht11.read(&temperature, &humidity, NULL);
    sensors.requestTemperatures();
    timesincerequest=millis();}
@@ -111,8 +111,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(" "); 
   if (gtag < 10) tft.print("0"); tft.print(gtag); 
   tft.print("."); 
-  tft.print(monat(gmonat));space(2); 
-  //if (gmonat < 10) tft.print("0"); tft.print(gmonat);
+  tft.print(monat(gmonat));tft.print("0");space(5); 
   tft.setCursor(-10, 120);
   tft.print(" "); 
   if (gjahr < 10) tft.print("0"); tft.print(gjahr);
@@ -145,14 +144,14 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(" Aussen: ");}
   tft.setTextSize(3);
   tft.setCursor(152,180);
-  tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C  ");
+  tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C      ");
   if ((first)||(gminute!=ominute)){
   tft.setTextSize(3);
   tft.setCursor(-10,210);
   tft.print(" Motor:  ");}
   tft.setTextSize(3);
   tft.setCursor(152,210);
-  tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C  ");
+  tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C      ");
  
 
   tft.setCursor(140,120);
@@ -169,10 +168,10 @@ String monat(byte t){//konvertiert eine zahl in einen String
       return "Februar";
     break;
     case 3:
-      return "März";
+      return "Maerz";
     break;
     case 4:
-      return "April";
+      return "0";
     break;
     case 5:
       return "Mai";
@@ -221,11 +220,11 @@ void wochentag(){//gibt einen String auf dem TFT aus
       tft.print("Sams");
     break;
     case 6:
-      tft.print("Son");
+      tft.print("Sonn");
     break;
   }
-  if (wtag==6) tft.print("n");
-  if (wtag!=4) tft.print("tag");
+
+  if (wtag!=2) tft.print("tag");
   
 }
 void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie 
@@ -345,7 +344,7 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   ss.begin(GPSBaud);
   sensors.begin();
   sensors.requestTemperatures();
-  
+  refresh();
   
 
 }
@@ -484,16 +483,16 @@ void tempstatus(){// Temperaturdiagramm
         tft.print(counter*2);
         tft.print("min");
       }
-      T1=141-sensors.getTempCByIndex(0);
-      T2=141-sensors.getTempCByIndex(1);
+      T2=141-sensors.getTempCByIndex(0);
+      T1=141-sensors.getTempCByIndex(1);
       timesincerequest=millis();  
       }
     
   if ((timesincerequest+2500)<millis()){
     Ta1=T1;
     Ta2=T2;
-    T1=141-sensors.getTempCByIndex(0);
-    T2=141-sensors.getTempCByIndex(1);
+    T2=141-sensors.getTempCByIndex(0);
+    T1=141-sensors.getTempCByIndex(1);
     sensors.requestTemperatures(); 
     timesincerequest=millis();   
     if (px>238)px=1; else px++;  
@@ -623,7 +622,7 @@ void loop() {
   if (menu==4) Gstatus();
   if (menu==5) tempstatus();
   if (menu==6) option();  
-  if (analogRead(A7)>500) analogWrite(3,Nightlight);else analogWrite(3,Daylight);
+  if (analogRead(A7)>300) analogWrite(3,Nightlight);else if(analogRead(A7)<100) analogWrite(3,Daylight);
  /* showInnen();
   showgf();
   showTime();
