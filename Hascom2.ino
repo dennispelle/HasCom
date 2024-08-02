@@ -119,6 +119,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
         
         tft.setCursor(116,150);
         tft.setTextColor(RED, BLACK);
+        if(temperature<10) tft.print(" ");
         tft.print(temperature);
         tft.fillRect((116+getlength(temperature)),165,30,14,BLACK);
         tft.setTextColor(WHITE, BLACK);
@@ -127,6 +128,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
         tft.print("C ");
         tft.setTextSize(3);
         tft.setTextColor(BLUE, BLACK);
+        if(humidity<10) tft.print(" ");
         tft.print(humidity);
         tft.fillRect((150+getlength(temperature)+getlength(humidity)),166,25,13,BLACK);
         tft.setTextColor(WHITE, BLACK);
@@ -510,11 +512,11 @@ void voltstatus(){// Oszifunktion :)
   xac++;                                              //Arraycounter +1
   if (x2>xmax)xmax=x2;                                //Verlgeich ob höchster je gemessener Wert überschritten wurde
   if (x2<xmin)xmin=x2;                                //Vergleich ob geringster je gemessener Wert Unterschritten wurde
-  tft.drawLine(px-1,127-x1,px,127-x2,RED);                    //Zeichne eine Line vom letzten zum aktuellen Messwert
+  tft.drawLine(px-1,127-x1,px,127-x2,RED);            //Zeichne eine Line vom letzten zum aktuellen Messwert
   x1=x2;                                              //Neuer Messwert in die Ablage für den Alten
   px++;                                               //Positionszähler eins aufadieren.
   if (px>239)px=1;                                    //Wenn Positionszähler größer als Bildschirm, von vorn beginnen
-  if (timer<(millis()-1000)){
+  if ((timer+2000)<millis()){
     timer=millis();
     tft.setTextColor(WHITE, BLACK);
     tft.setTextSize(2);
@@ -738,6 +740,10 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
         first=0;
       } 
 void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Speichers usw.
+  ss.begin(GPSBaud);
+  sensors.begin();
+  sensors.requestTemperatures();
+  mySensor.read();
   if(RTC.read(tm)==0)RTC.write(tm);
   EEPROM.get(0, Sommerzeit);
   EEPROM.get(1, Daylight);
@@ -754,10 +760,8 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   tft.setTextWrap(false);
   tft.setRotation(3);
   tft.fillScreen(BLACK);
-  ss.begin(GPSBaud);
-  sensors.begin();
-  sensors.requestTemperatures();
-  
+
+
 
 }
 void loop() {
