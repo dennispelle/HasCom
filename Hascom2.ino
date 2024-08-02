@@ -169,7 +169,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(analogRead(A3)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
   first=0;
 }
-String monat(byte t){//konvertiert eine zahl in einen String 
+void monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 1:
       tft.print("Januar");
@@ -340,6 +340,7 @@ void getbatday(){// Hole das datum aus dem Batteriemodul
     gjahr=tmYearToCalendar(tm.Year);//-2000;
   }
 void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Speichers usw.
+  if(RTC.read(tm)==0)RTC.write(tm);
   EEPROM.get(0, Sommerzeit);
   EEPROM.get(1, Daylight);
   EEPROM.get(2, Nightlight);
