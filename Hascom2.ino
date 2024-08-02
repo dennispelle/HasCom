@@ -12,6 +12,9 @@
   Ö is 0x99
   Ü is 0x9A
  *************************************************** */
+
+
+
 // EEPROM zur Speicherung der Sommer/Winterzeit und der Helligkeitseinstellungen
 #include <EEPROM.h>
 boolean Sommerzeit; 
@@ -114,7 +117,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(" "); 
   if (gjahr < 10) tft.print("0"); tft.print(gjahr);
   }
-  tft.setCursor(150,60);tft.print(millis()%10);
+  //tft.setCursor(150,60);tft.print(millis()%10);
 // Zeige das Raumklima an
   getTemp(); //Hole die Temperatur und Luftfeucht vom DHT
   if ((first)||(gminute!=ominute)){
@@ -328,7 +331,6 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   EEPROM.get(0, Sommerzeit);
   EEPROM.get(1, Daylight);
   EEPROM.get(2, Nightlight);
-
   
   pinMode(3,OUTPUT);
   digitalWrite(0,1);
@@ -418,8 +420,8 @@ void voltstatus(){// Oszifunktion :)
 void Gstatus(){// Gmeter like Gran Tourismo!
   byte kali;
   if (!digitalRead(0)){ gkalibrate();tft.fillScreen(BLACK);}
-  tft.fillCircle(-gy*50+100,-gx*50+100,2,0B0001100001100011);
-  tft.fillCircle(220,gz*50+100,2,0B0000100000100001);
+  tft.fillCircle(-gy*100+100,-gx*100+100,2,0B0011100011100111);
+  tft.fillCircle(220,gz*100,2,0B0011100011100111);
   tft.drawFastVLine(100,0,200,WHITE);
   tft.drawFastVLine(220,0,200,WHITE);
   tft.drawFastHLine(0,100,240,WHITE);
@@ -439,17 +441,17 @@ void Gstatus(){// Gmeter like Gran Tourismo!
   gz=gz*0.0061-2.0625-gkz;
   
   
-  tft.fillCircle(-gy*50+100,-gx*50+100,2,RED);
-  tft.fillCircle(220,gz*50+100,2,RED);
+  tft.fillCircle(-gy*100+100,-gx*100+100,2,RED);
+  tft.fillCircle(220,gz*100,2,RED);
 
     tft.setTextColor(WHITE, BLACK);
     tft.setTextSize(2);
     tft.setCursor(-10, 205);
-    tft.print(" G.B:");tft.print(gx,1);tft.print(" ");
+    tft.print(" Gx:");if (gx>=0)tft.print(" "); tft.print(gx,2);tft.print(" ");
     tft.setCursor(-10, 225);
-    tft.print(" G.S:");tft.print(gy,1);tft.print(" ");
-    tft.setCursor(120, 205);
-    tft.print("G.F:");tft.print(gz,1);tft.print(" ");
+    tft.print(" Gy:");if (gy>=0)tft.print(" "); tft.print(gy,2);tft.print(" ");
+    tft.setCursor(100, 205);
+    tft.print(" Gz:");if (gz>=0)tft.print(" ");tft.print(gz,2);tft.print(" ");
 
   }
 void gkalibrate(){// Gsensor Kalibrieren//
