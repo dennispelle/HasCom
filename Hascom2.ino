@@ -78,15 +78,16 @@ byte getlength(int N){// überprüfe die anzahl der Ziffern und wandle sie in Pi
   else if(N<100)return 36;
   else return 54;
   }
+byte tempsensorstage=1;
+unsigned long TempUhr;  
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
-  if ((timesincerequest+2000)<millis()){// schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
-   T2=sensors.getTempCByIndex(0);
-   T1=sensors.getTempCByIndex(1); 
-   temperature = mySensor.getTemperature();
-   humidity = mySensor.getHumidity();
-   sensors.requestTemperatures();
-   mySensor.read();
-   timesincerequest=millis();}
+  // schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
+  if ((tempsensorstage==1)&((TempUhr+750)<millis())) {T2=sensors.getTempCByIndex(0);           tempsensorstage=2;}
+  if ((tempsensorstage==2)&((TempUhr+1500)<millis())){T1=sensors.getTempCByIndex(1);           tempsensorstage=3;  sensors.requestTemperatures();}
+  if ((tempsensorstage==3)&((TempUhr+2250)<millis())){temperature = mySensor.getTemperature(); tempsensorstage=4;}
+  if ((tempsensorstage==4)&((TempUhr+3000)<millis())){humidity = mySensor.getHumidity();       tempsensorstage=1;  TempUhr=millis();mySensor.read();}
+
+ 
   }
 void space(byte n){
   for(byte k=0;k<n;k++)tft.print(" ");
@@ -108,6 +109,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
         if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
         tft.print(":"); 
         if (gminute < 10) tft.print("0"); tft.print(gminute);
+        
         // Wochentag Mittig
         tft.setTextSize(3 );
         tft.setCursor(-10,60);
@@ -351,7 +353,8 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   EEPROM.get(0, Sommerzeit);
   EEPROM.get(1, Daylight);
   EEPROM.get(2, Nightlight);
-  
+  if(Daylight==0)Daylight=1;
+  if(Nightlight==0)Nightlight=1;
   pinMode(3,OUTPUT);
   digitalWrite(0,1);
   digitalWrite(1,1);
