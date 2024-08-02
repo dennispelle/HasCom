@@ -5,3 +5,6 @@ Vielleicht mache ich das nochmal ordentlich. Ich hab auch Librarys verwendet, di
 Die Librarys fehlen hier jetzt natürlich, sollten aber einfach zu finden sein.
 
 Ich habe die 3D-Files gefunden, die ich mit FreeCad gebaut habe. FreeCad ist kostenlos und ein wirklich tolles programm!
+
+Vielleicht finde ich noch die Datein für die Hauptplatine, die ich gefertigt hab. Man braucht das zwar nicht unbedingt um das Projekt nachzubauen,
+aber schön wäre es trotzdem.
