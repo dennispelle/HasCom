@@ -71,7 +71,8 @@ byte menu=1; // Menu Variable.
 // ende Variablendefintition
 
 byte getlength(int N){// überprüfe die anzahl der Ziffern
-  if(N<-9) return 54;
+  if(N<-99)return 72;
+  else if(N<-9) return 54;
   else if(N<0)return 36;
   else if(N<10)return 18;
   else if(N<100)return 36;
@@ -213,31 +214,31 @@ String monat(byte t){//konvertiert eine zahl in einen String
 void wochentag(){//gibt einen String auf dem TFT aus
   getbatday();
   switch (wtag) {
-    case 1:  
+    case 0:  
       tft.print("Mon");
     break;
-    case 2:  
+    case 1:  
       tft.print("Diens");
     break;
-    case 3:
+    case 2:
       tft.print("Mittwoch");
     break;   
-    case 4:
+    case 3:
       tft.print("Donners");
     break;   
-    case 5:
+    case 4:
       tft.print("Frei");
     break;   
-    case 6:
+    case 5:
       tft.print("Sams");
     break;
-    case 0:
+    case 6:
       tft.print("Sonn");
     break;
   }
 
   if (wtag!=2) tft.print("tag");
-  
+  space(5);
 }
 void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie 
   while (ss.available() > 0)
@@ -431,7 +432,7 @@ void Gstatus(){// Gmeter like Gran Tourismo!
   byte kali;
   if (!digitalRead(0)){ gkalibrate();tft.fillScreen(BLACK);}
   tft.fillCircle(-gy*100+100,-gx*100+100,2,0B0011100011100111);
-  tft.fillCircle(220,gz*100,2,0B0011100011100111);
+  tft.fillCircle(220,-gz*100,2,0B0011100011100111);
   tft.drawFastVLine(100,0,200,WHITE);
   tft.drawFastVLine(220,0,200,WHITE);
   tft.drawFastHLine(0,100,240,WHITE);
@@ -441,9 +442,9 @@ void Gstatus(){// Gmeter like Gran Tourismo!
   tft.drawCircle(100,100,50,WHITE);
   gx=0;gy=0;gz=0;
   //for (kali=0;kali<10;kali++){
-  gx+=analogRead(A0);
-  gy+=analogRead(A1);
-  gz+=analogRead(A2);
+  gx+=analogRead(A1);
+  gy+=analogRead(A2);
+  gz+=analogRead(A0);
   //}
   //gx/=10;gy/=10;gz/=10;
   gx=gx*0.0061-2.0625-gkx;
@@ -452,7 +453,7 @@ void Gstatus(){// Gmeter like Gran Tourismo!
   
   
   tft.fillCircle(-gy*100+100,-gx*100+100,2,RED);
-  tft.fillCircle(220,gz*100,2,RED);
+  tft.fillCircle(220,-gz*100,2,RED);
 
     tft.setTextColor(WHITE, BLACK);
     tft.setTextSize(2);
@@ -467,9 +468,9 @@ void Gstatus(){// Gmeter like Gran Tourismo!
 void gkalibrate(){// Gsensor Kalibrieren//
   float kali=0;
   for(kali=1;kali<100;kali++){
-    gkx+=analogRead(A0);
-    gky+=analogRead(A1);
-    gkz+=analogRead(A2);
+    gkx+=analogRead(A1);
+    gky+=analogRead(A2);
+    gkz+=analogRead(A0);
     }
   gkx/=100;
   gky/=100;
