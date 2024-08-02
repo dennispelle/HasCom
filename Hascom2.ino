@@ -102,13 +102,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   if ((first)||(gminute!=ominute)){// schau, ob das Bild aktualisiert werden muss
       ominute=gminute;
   // Uhrzeit, Stunde:Minute
-        tft.setCursor(-30, 5);
-        tft.setTextColor(WHITE, BLACK);
-        tft.setTextSize(7);
-        tft.print(" ");
-        if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
-        tft.print(":"); 
-        if (gminute < 10) tft.print("0"); tft.print(gminute);
+        printStartTimeHour();
         
         // Wochentag Mittig
         tft.setTextSize(3 );
@@ -178,6 +172,17 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(analogRead(A3)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
   first=0;
 }
+void printStartTimeHour(){
+    // Uhrzeit, Stunde:Minute
+        tft.setCursor(-30, 5);
+        tft.setTextColor(WHITE, BLACK);
+        tft.setTextSize(7);
+        tft.print(" ");
+        if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
+        tft.print(":"); 
+        if (gminute < 10) tft.print("0"); tft.print(gminute);
+  
+  }
 void monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 1:
@@ -348,29 +353,6 @@ void getbatday(){// Hole das datum aus dem Batteriemodul
     gmonat=tm.Month;
     gjahr=tmYearToCalendar(tm.Year);//-2000;
   }
-void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Speichers usw.
-  if(RTC.read(tm)==0)RTC.write(tm);
-  EEPROM.get(0, Sommerzeit);
-  EEPROM.get(1, Daylight);
-  EEPROM.get(2, Nightlight);
-  if(Daylight==0)Daylight=1;
-  if(Nightlight==0)Nightlight=1;
-  pinMode(3,OUTPUT);
-  digitalWrite(0,1);
-  digitalWrite(1,1);
-  digitalWrite(2,1);
-  
-  gkalibrate();
-  tft.init(240, 240);   // initialize a ST7789 chip, 240x240 pixels
-  tft.setTextWrap(false);
-  tft.setRotation(3);
-  tft.fillScreen(BLACK);
-  ss.begin(GPSBaud);
-  sensors.begin();
-  sensors.requestTemperatures();
-  
-
-}
 void refresh(){// Bildschirm löschen
   tft.fillScreen(BLACK);
   first=1;
@@ -666,7 +648,8 @@ void tempstatus(){// Temperaturdiagramm
   }
 void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
    byte omenu=1;
-   boolean out=0;
+   boolean out=0,change=0;
+   if (first){
     tft.setTextColor(WHITE, BLACK);
     tft.setTextSize(2);
     tft.setCursor(-10, 10);
@@ -677,17 +660,19 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
     tft.print(" Helligk.-Nacht:");tft.print(Nightlight);
     tft.setCursor(-10, 100);
     tft.print(" Exit");
-    
+   }
     if (!digitalRead(0)){
+      change=1;
       out=1;
       while (!digitalRead(0));
       while (out){
        
-        if (!digitalRead(2)){omenu++;}
-        if (!digitalRead(1)){omenu--;}
+        if (!digitalRead(2)){omenu++;change=1;}
+        if (!digitalRead(1)){omenu--;change=1;}
+        if (!digitalRead(0)){change=1;}
         if(omenu>4)omenu=1;
         if(omenu<1)omenu=4;
-          
+          if (change){// Bildschirm nur aktualisieren, wenn sich was geändert hat.
             if (omenu==1)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 10);
             if (Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit ");
@@ -700,7 +685,15 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
             if (omenu==4)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 100);
             tft.print(" Exit");
-          if (!digitalRead(0)) if (omenu==4){out=0;while(!digitalRead(0));}// user wählt EXIT
+            change=0;
+          }
+          if (!digitalRead(0)) if (omenu==4){// user wählt EXIT
+            out=0;
+            tft.setTextColor(WHITE, BLACK);
+            tft.setCursor(-10, 100);
+            tft.print(" Exit");
+            while(!digitalRead(0));
+            }
           if (!digitalRead(0)) if (omenu==1){
                                               Sommerzeit=!Sommerzeit;
                                               tft.setTextColor(BLACK,YELLOW); 
@@ -716,7 +709,7 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
                 tft.print(Daylight);
                 tft.print("  ");
                 if (!digitalRead(1))if (Daylight<255)Daylight++;
-                if (!digitalRead(2))if (Daylight > 0)Daylight--;
+                if (!digitalRead(2))if (Daylight > 1)Daylight--;
                 analogWrite(3,Daylight);
                 }
                 EEPROM.put(1,Daylight);
@@ -728,14 +721,38 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
                 tft.print(Nightlight);
                 tft.print("  ");
                 if (!digitalRead(1))if (Nightlight<255)Nightlight++;
-                if (!digitalRead(2))if (Nightlight> 0)Nightlight--;
+                if (!digitalRead(2))if (Nightlight> 1)Nightlight--;
                 analogWrite(3,Nightlight);
                 }
                 EEPROM.put(2,Nightlight);
             }
           }
         }   
+        first=0;
       } 
+void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Speichers usw.
+  if(RTC.read(tm)==0)RTC.write(tm);
+  EEPROM.get(0, Sommerzeit);
+  EEPROM.get(1, Daylight);
+  EEPROM.get(2, Nightlight);
+  if(Daylight==0)Daylight=1;
+  if(Nightlight==0)Nightlight=1;
+  pinMode(3,OUTPUT);
+  digitalWrite(0,1);
+  digitalWrite(1,1);
+  digitalWrite(2,1);
+  
+  gkalibrate();
+  tft.init(240, 240);   // initialize a ST7789 chip, 240x240 pixels
+  tft.setTextWrap(false);
+  tft.setRotation(3);
+  tft.fillScreen(BLACK);
+  ss.begin(GPSBaud);
+  sensors.begin();
+  sensors.requestTemperatures();
+  
+
+}
 void loop() {
  // while(!wtag)getbatday();
 // Menu1
