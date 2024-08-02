@@ -51,7 +51,7 @@ TinyGPSPlus gps;
 static const int RXPin = 6, TXPin = 7;
 static const uint32_t GPSBaud = 9600;
 SoftwareSerial ss(RXPin, TXPin);
-byte wtag, gmonat, gtag, gstunde, gminute, gsekunde, zeitzone=1 ,gpsdn,gpstn; ; //Zeitzone für sommer/winterzeit usw
+byte wtag, gmonat, gtag, gstunde, gminute,ominute=61, gsekunde, zeitzone=1 ,gpsdn,gpstn; ; //Zeitzone für sommer/winterzeit usw
 int gjahr;
 bool gpst=0,gpsd=0,savetime=1;
 
@@ -71,10 +71,13 @@ byte menu=1; // Menu Variable.
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
   if ((timesincerequest+2000)<millis()){// schaue ob die letzte Messung der der Temperatursenosren wenigstens eine sekunde her ist, ansonsten überspringen
    T1=sensors.getTempCByIndex(0);
-   T2=sensors.getTempCByIndex(1);
+   T2=sensors.getTempCByIndex(1);    
+   err = dht11.read(&temperature, &humidity, NULL);
    sensors.requestTemperatures();
-   timesincerequest=millis();
-   err = dht11.read(&temperature, &humidity, NULL);}
+   timesincerequest=millis();}
+  }
+void space(byte n){
+  for(byte k=0;k<n;k++)tft.print(" ");
   }
 void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß an, dazu Clima und Temperaturen an.
     
@@ -83,7 +86,8 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   getGpsClock();
   if (!gpst) getbatclock(); //schau ob die GPSzeit stimmt, wenn nicht hol die Zeit aus der Uhr
   if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
-
+  if ((first)||(gminute!=ominute)){// schau, ob das Bild aktualisiert werden muss
+      ominute=gminute;
   // Uhrzeit, Stunde:Minute:Sekunde
   tft.setCursor(-30, 5);
   tft.setTextColor(WHITE, BLACK);
@@ -95,27 +99,29 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   //tft.print(":"); 
   //if (gsekunde < 10) tft.print("0"); tft.print(gsekunde);
   // Wochentag Mittig
-  
-  
   tft.setTextSize(3 );
   tft.setCursor(-10,60);
   tft.print(" ");
-  tft.print(wochentag(wtag));
+  wochentag();
   
   tft.setCursor(-10, 90);
   tft.print(" "); 
   if (gtag < 10) tft.print("0"); tft.print(gtag); 
   tft.print("."); 
-  tft.print(monat(gmonat)); 
+  tft.print(monat(gmonat));space(2); 
   //if (gmonat < 10) tft.print("0"); tft.print(gmonat);
   tft.setCursor(-10, 120);
   tft.print(" "); 
   if (gjahr < 10) tft.print("0"); tft.print(gjahr);
-
+  }
+  tft.setCursor(150,60);tft.print(millis()%10);
 // Zeige das Raumklima an
   getTemp(); //Hole die Temperatur und Luftfeucht vom DHT
+  if ((first)||(gminute!=ominute)){
   tft.setCursor(-10,150);
-  tft.print(" Innen:");
+  tft.setTextColor(WHITE, BLACK);
+  tft.print(" Innen:");}
+  tft.setCursor(116,150);
   tft.setTextColor(RED, BLACK);
   tft.print(temperature);
   tft.setTextColor(WHITE, BLACK);
@@ -130,83 +136,94 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print("%");
 
 // Zeige Temperatursensoren an
+  if ((first)||(gminute!=ominute)){
   tft.setCursor(-10,180);
   tft.setTextSize(3);
-  tft.print(" Aussen: ");tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C");
+  tft.print(" Aussen: ");}
+  tft.setTextSize(3);
+  tft.setCursor(152,180);
+  tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C  ");
+  if ((first)||(gminute!=ominute)){
   tft.setTextSize(3);
   tft.setCursor(-10,210);
-  tft.print(" Motor:  ");tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C");
+  tft.print(" Motor:  ");}
+  tft.setTextSize(3);
+  tft.setCursor(152,210);
+  tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C  ");
  
 
   tft.setCursor(140,120);
   tft.setTextSize(3);
   tft.print(analogRead(A6)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
- 
+  first=0;
 }
 String monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 1:
-      return "Januar   ";
+      return "Januar";
     break;
     case 2:
-      return "Februar  ";
+      return "Februar";
     break;
     case 3:
-      return "März     ";
+      return "März";
     break;
     case 4:
-      return "April    ";
+      return "April";
     break;
     case 5:
-      return "Mai      ";
+      return "Mai";
     break;
     case 6:
-      return "Juni     ";
+      return "Juni";
     break;
     case 7:
-      return "Juli     ";
+      return "Juli";
     break;
     case 8:
-      return "August   ";
+      return "August";
     break;
     case 9:
       return "September";
     break;
     case 10:
-      return "Oktober  ";
+      return "Oktober";
     break;
     case 11:
-      return "November ";
+      return "November";
     break;
     case 12:
-      return "Dezember ";
+      return "Dezember";
     break;
   }  
 }
-String wochentag(byte t){//konvertiert eine zahl in einen String 
-  switch (t) {
+void wochentag(){//gibt einen String auf dem TFT aus
+  switch (wtag) {
+    case 0:  
+      tft.print("Mon");
+    break;
     case 1:  
-      return "Montag    ";
-    break;
-    case 3:  
-      return "Dienstag  ";
-    break;
-    case 4:
-      return "Mittwoch  ";
-    break;   
-    case 5:
-      return "Donnerstag";
-    break;   
-    case 6:
-      return "Freitag   ";
-    break;   
-    case 7:
-      return "Samstag   ";
+      tft.print("Diens");
     break;
     case 2:
-      return "Son°tag   ";
+      tft.print("Mittwoch");
+    break;   
+    case 3:
+      tft.print("Donners");
+    break;   
+    case 4:
+      tft.print("Frei");
+    break;   
+    case 5:
+      tft.print("Sams");
     break;
-  }  
+    case 6:
+      tft.print("Son");
+    break;
+  }
+  if (wtag==6) tft.print("n");
+  if (wtag!=4) tft.print("tag");
+  
 }
 void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie 
   while (ss.available() > 0)
@@ -327,7 +344,7 @@ void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Spe
   sensors.begin();
   sensors.requestTemperatures();
   
-  //drawFrame();
+  
 
 }
 void refresh(){// Bildschirm löschen
@@ -355,7 +372,7 @@ void gpsstatus(){// Funktionsbildschirm für GPS, zeigt Satelitenanzahl, Koordin
   tft.setCursor(-10, 155);
   tft.print(" S:"); tft.print(gps.speed.kmph(),1);tft.print("Km/h   ");
   tft.setCursor(-10, 180);
-  tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));tft.print("   ");
+  tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));space(3);
   }
 void voltstatus(){// Oszifunktion :)
   
@@ -546,7 +563,7 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
           
             if (omenu==1)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 10);
-            if (Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit ");
+            if (Sommerzeit) tft.print(" Sommerzeit");   else tft.print(" Winterzeit");
             if (omenu==2)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
             tft.setCursor(-10, 40);
             tft.print(" Helligk.-Tag  :");tft.print(Daylight);tft.print("  ");
@@ -591,9 +608,9 @@ void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
             }
           }
         }   
-      }
-  
+      } 
 void loop() {
+ // while(!wtag)getbatday();
 // Menu1
   if (!digitalRead(2)){menu++;refresh();}
   if (!digitalRead(1)){menu--;refresh();}
