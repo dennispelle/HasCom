@@ -149,7 +149,7 @@ void getVolt(){
   uMin=1023;
   uMax=0;
   for(x=0;x<50;x++){
-      uNow=5.0*analogRead(A0)/1023.0;
+      uNow=30.0*analogRead(A0)/1023.0+1.1;
       uAvr+=uNow;
       if (uNow>uMax)uMax=uNow;
       if (uNow<uMin)uMin=uNow;
@@ -168,13 +168,13 @@ void showVolt(){
   lcd.print("Ud=");lcd.print(uRip);lcd.print("V");
   }
 void showTemp(){
-  if((millis()/1000)%5){
+ 
   T1=sensors.getTempCByIndex(0);
   T2=sensors.getTempCByIndex(1);
   lcd.setCursor(0,0);
   lcd.print("T1=");lcd.print(T1);
   lcd.setCursor(0,1);
-  lcd.print("T2=");lcd.print(T2);}
+  lcd.print("T2=");lcd.print(T2);
 }
 void setNightlight(){
     lcd.setCursor(0,0);
@@ -247,14 +247,15 @@ if ((!digitalRead(A3))&&(millis()-timer>2000)){
 
   
 void loop() { 
-    if((millis()/1000)%5){
-      T1=sensors.getTempCByIndex(0);}
-      if((millis()/1000+3)%5){
-      T2=sensors.getTempCByIndex(1);}
+
+      T1=sensors.getTempCByIndex(0);
+ 
+      T2=sensors.getTempCByIndex(1);
       getTemp();
     Menu+=getButton();
-    if (digitalRead(13)) analogWrite(9,Nightlight); 
-    else analogWrite(9,Daylight);
+    digitalWrite(9,HIGH);
+    //if (digitalRead(13)) analogWrite(9,Nightlight); 
+    //else analogWrite(9,Daylight);
    
     
     if (Menu==0)showClock();
