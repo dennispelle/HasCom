@@ -54,6 +54,11 @@ bool gpst=0,gpsd=0,savetime=1;
 // variablendefinition
 float gx, gy; // fließkommzahl für die G-Kräfte
 byte menu; // Menu Variable.
+
+  boolean first=1; //Hilfsvariable 
+  byte x1,x2,px=1,xmax,xmin,xac;
+  byte xav[10];
+  unsigned long timer=millis();
 // ende Variablendefintition
 
 
@@ -75,7 +80,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
 
   // Uhrzeit, Stunde:Minute:Sekunde
   tft.setCursor(-30, 5);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(7);
   tft.print(" ");
   if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
@@ -105,16 +110,16 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   getTemp(); //Hole die Temperatur und Luftfeucht vom DHT
   tft.setCursor(-10,150);
   tft.print(" Innen:");
-  tft.setTextColor(RED, WHITE);
+  tft.setTextColor(RED, BLACK);
   tft.print(temperature);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print(char(0xF7));
   tft.print("C ");
   tft.setTextSize(3);
-  tft.setTextColor(BLUE, WHITE);
+  tft.setTextColor(BLUE, BLACK);
   tft.print(humidity);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("%");
   }
@@ -129,7 +134,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
  if(1){
   tft.setCursor(140,120);
   tft.setTextSize(3);
-  tft.print("12,5"); tft.setTextColor(RED, WHITE);tft.print("V");
+  tft.print("12,5"); tft.setTextColor(RED, BLACK);tft.print("V");
  }
   }
 String monat(byte t){
@@ -198,10 +203,10 @@ String wochentag(byte t){
   }  
 }
 void showTemp(){//Zeige die Temperaturen der Aussensensoren an
-  tft.setCursor(2, 62);   tft.setTextColor(BLACK, WHITE);   tft.setTextSize(2);
+  tft.setCursor(2, 62);   tft.setTextColor(WHITE, BLACK);   tft.setTextSize(2);
   tft.print("T1=");   tft.print(T1,1);    tft.print(char(0xF7));    tft.print("C");
   
-  tft.setCursor(2, 82);   tft.setTextColor(BLACK, WHITE);   tft.setTextSize(2);
+  tft.setCursor(2, 82);   tft.setTextColor(WHITE, BLACK);   tft.setTextSize(2);
   tft.print("T2=");   tft.print(T2,1);    tft.print(char(0xF7));    tft.print("C");
   }
 void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie 
@@ -313,14 +318,14 @@ void showTime() {// stelle die Zeit dar
   if (!gpst) getbatclock(); //schau ob die GPSzeit stimmt, wenn nicht hol die Zeit aus der Uhr
   if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
   tft.setCursor(150, 193);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
   tft.print(":"); 
   if (gminute < 10) tft.print("0"); tft.print(gminute);
 
   tft.setCursor(130, 218);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2 );
 
   if (gtag < 10) tft.print("0"); tft.print(gtag); 
@@ -332,14 +337,14 @@ void showTime() {// stelle die Zeit dar
 void showInnen() {//stelle die Innentemperatur und die Luftfeuchte dar
   getTemp();
   tft.setCursor(5, 193);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("T.i:");
   tft.print(temperature);
   tft.print(char(0xF7));
   tft.print("C");
   tft.setCursor(5, 218);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("H.i: ");
   tft.print(humidity);
@@ -348,7 +353,7 @@ void showInnen() {//stelle die Innentemperatur und die Luftfeuchte dar
 }
 void showGPS() { //Zeige die GPSdaten an, so
   tft.setCursor(2, 2);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("S");
   tft.print(gps.satellites.value());
@@ -386,36 +391,96 @@ void getGf() {//Miss die Gkräfte und korrigiere sie
 void showgf(){//stelle die Gkräfte dar
   getGf();
   tft.setCursor(2, 22);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("G=");
   tft.print(gx);
   tft.setCursor(2, 42);
-  tft.setTextColor(BLACK, WHITE);
+  tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("S="); tft.print(gy);
   tft.setCursor(2, 62);
 }
 void setup(void) {
-  
   pinMode(3,OUTPUT);
   analogWrite(3,255);
   
   tft.init(240, 240);   // initialize a ST7789 chip, 240x240 pixels
   tft.setRotation(3);
-  tft.fillScreen(WHITE);
+  tft.fillScreen(BLACK);
   ss.begin(GPSBaud);
   sensors.begin();
   
   //drawFrame();
 
 }
+void gpsstatus(){
+   while (ss.available() > 0)
+    if (gps.encode(ss.read())); 
+  tft.setTextColor(WHITE, BLACK);
+  tft.setTextSize(3);
+  tft.setCursor(-10, 5);
+  tft.print(" Sateliten:"); tft.print(gps.satellites.value());tft.print(" ");
+  tft.setCursor(-10, 30);
+  tft.print(" B:"); tft.print(gps.location.lat(), 6);tft.print("  ");
+  tft.setCursor(-10, 55);
+  tft.print(" L:"); tft.print(gps.location.lng(), 6);tft.print("  "); 
+  tft.setCursor(-10, 80);
+  tft.print(" H:"); tft.print(gps.altitude.meters(),0); tft.print("m    ");
+  tft.setCursor(-10, 130);
+  tft.print(" D:"); tft.print(gps.date.day()); tft.print(".");  tft.print(gps.date.month());tft.print("."); tft.print(gps.date.year());
+  tft.setCursor(-10, 105);
+  tft.print(" C:");  tft.print(gps.time.hour()); tft.print(":"); tft.print(gps.time.minute());tft.print(":"); tft.print(gps.time.second());tft.print(" ");
+  tft.setCursor(-10, 155);
+  tft.print(" S:"); tft.print(gps.speed.kmph(),1);tft.print("Km/h   ");
+  tft.setCursor(-10, 180);
+  tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));tft.print("   ");
+  }
+
+void voltstatus(){
+  
+
+    if (first){
+      tft.fillRect(0,1,239,123,WHITE);
+      x1=analogRead(A1)/8;
+      first=0;
+      for (xac=0;xac<10;xac++){
+        xav[xac]=analogRead(A1)/8;
+      }
+    }
+  if (xac>9)xac=0;
+  if (px==1)  tft.drawFastVLine(0,1,127,WHITE); 
+  tft.drawFastVLine(px,1,127,WHITE);                  //Radieren für neue Messewerte
+  
+  x2=analogRead(A1)/8;                                //neue Messnung
+  xav[xac]=x2;                                        //Messung ins Variablen Array packen, für Durchschnitsberechnung
+  xac++;                                              //Arraycounter +1
+  if (x2>xmax)xmax=x2;                                //Verlgeich ob höchster je gemessener Wert überschritten wurde
+  if (x2<xmin)xmin=x2;                                //Vergleich ob geringster je gemessener Wert Unterschritten wurde
+  tft.drawLine(px-1,x1,px,x2,RED);                    //Zeichne eine Line vom letzten zum aktuellen Messwert
+  x1=x2;                                              //Neuer Messwert in die Ablage für den Alten
+  px++;                                               //Positionszähler eins aufadieren.
+  if (px>239)px=1;                                    //Wenn Positionszähler größer als Bildschirm, von vorn beginnen
+  if (timer<(millis()-1000)){
+    timer=millis();
+    tft.setTextColor(WHITE, BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(-10, 135);
+    tft.print(" Boardspannung:");tft.print((xav[0]+xav[1]+xav[2]+xav[3]+xav[4]+xav[5]+xav[6]+xav[7]+xav[8]+xav[9])/64.0,1);tft.print("V");  // Gebe durchschnittsspannung an
+    tft.setCursor(-10, 155);
+    tft.print(" Spannungsmaxi:");tft.print(xmax/6.4,1);tft.print("V ");xmax=0;
+    tft.setCursor(-10, 175);
+    tft.print(" Spannungsmini:");tft.print(xmin/6.4,1);tft.print("V ");xmin=255;
+  }
+  
+  
+  }
 void loop() {
 // Menu1
 
-  if (menu==0) startbildschirm();
-tft.invertDisplay(1);
-  
+  if (menu==1) startbildschirm();
+  if (menu==2) gpsstatus();
+  if (menu==0) voltstatus();
  /* showInnen();
   showgf();
   showTime();
