@@ -55,6 +55,7 @@ void setup() {
 
 }
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
+    sensors.requestTemperatures();
    err = dht11.read(&temperature, &humidity, NULL);
   }
 void showClima(){// Zeige Temperatur und Luftfeuchte im Fahrzeug an
@@ -168,13 +169,13 @@ void showVolt(){
   lcd.print("Ud=");lcd.print(uRip);lcd.print("V");
   }
 void showTemp(){
- 
+  if((millis()/1000)%5){
   T1=sensors.getTempCByIndex(0);
   T2=sensors.getTempCByIndex(1);
   lcd.setCursor(0,0);
   lcd.print("T1=");lcd.print(T1);
   lcd.setCursor(0,1);
-  lcd.print("T2=");lcd.print(T2);
+  lcd.print("T2=");lcd.print(T2);}
 }
 void setNightlight(){
     lcd.setCursor(0,0);
@@ -200,8 +201,8 @@ void setDaylight(){
     lcd.print("        ");
     while (digitalRead(A2)){
       lcd.setCursor(2,1);
-      if ((Nightlight/2.55)<100) lcd.print(" ");
-      lcd.print(Nightlight/2.55);
+      if ((Daylight/2.55)<100) lcd.print(" ");
+      lcd.print(Daylight/2.55);
       lcd.print("%");
       if (!digitalRead(A1)){ Daylight--;delay(50);}
       if (!digitalRead(A3)){ Daylight++;delay(50);}
@@ -247,15 +248,16 @@ if ((!digitalRead(A3))&&(millis()-timer>2000)){
 
   
 void loop() { 
-
+    if (!(((millis()/1000)+1)%5))getTemp();
+    if(!((millis()/1000)%5)){
       T1=sensors.getTempCByIndex(0);
- 
       T2=sensors.getTempCByIndex(1);
-      getTemp();
+    }
+
+
     Menu+=getButton();
-    digitalWrite(9,HIGH);
-    //if (digitalRead(13)) analogWrite(9,Nightlight); 
-    //else analogWrite(9,Daylight);
+    if (digitalRead(13)) analogWrite(9,Nightlight); 
+    else analogWrite(9,Daylight);
    
     
     if (Menu==0)showClock();
