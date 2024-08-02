@@ -52,13 +52,15 @@ int gjahr;
 bool gpst=0,gpsd=0,savetime=1;
 
 // variablendefinition
-float gx, gy; // fließkommzahl für die G-Kräfte
+float gx,gy,gz,gkx,gky,gkz; // fließkommzahl für die G-Kräfte
 byte menu; // Menu Variable.
 
   boolean first=1; //Hilfsvariable 
   byte x1,x2,px=1,xmax,xmin,xac;
   byte xav[10];
   unsigned long timer=millis();
+
+
 // ende Variablendefintition
 
 
@@ -73,7 +75,7 @@ void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere s
 void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß an, dazu Clima und Temperaturen an.
     
     
- if(1){// Block für die Uhrzeit und das Datum
+// Block für die Uhrzeit und das Datum
   getGpsClock();
   if (!gpst) getbatclock(); //schau ob die GPSzeit stimmt, wenn nicht hol die Zeit aus der Uhr
   if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
@@ -105,8 +107,8 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.setCursor(-10, 120);
   tft.print(" "); 
   if (gjahr < 10) tft.print("0"); tft.print(gjahr);
- }//
- if(1){// Zeige das Raumklima an
+
+// Zeige das Raumklima an
   getTemp(); //Hole die Temperatur und Luftfeucht vom DHT
   tft.setCursor(-10,150);
   tft.print(" Innen:");
@@ -122,22 +124,22 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.setTextColor(WHITE, BLACK);
   tft.setTextSize(2);
   tft.print("%");
-  }
- if(1){// Zeige Temperatursensoren an
+
+// Zeige Temperatursensoren an
   tft.setCursor(-10,180);
   tft.setTextSize(3);
   tft.print(" Aussen: ");tft.print(T1,0);    tft.setTextSize(2);       tft.print(char(0xF7));    tft.print("C");
   tft.setTextSize(3);
   tft.setCursor(-10,210);
   tft.print(" Motor:  ");tft.print(T2,0);    tft.setTextSize(2);    tft.print(char(0xF7));    tft.print("C");
- } 
- if(1){
+ 
+
   tft.setCursor(140,120);
   tft.setTextSize(3);
   tft.print("12,5"); tft.setTextColor(RED, BLACK);tft.print("V");
- }
-  }
-String monat(byte t){
+ 
+}
+String monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 1:
       return "Januar   ";
@@ -177,7 +179,7 @@ String monat(byte t){
     break;
   }  
 }
-String wochentag(byte t){
+String wochentag(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
     case 3:  
       return "Montag    ";
@@ -403,9 +405,13 @@ void showgf(){//stelle die Gkräfte dar
 }
 void setup(void) {
   pinMode(3,OUTPUT);
+  digitalWrite(0,1);
+  digitalWrite(1,1);
+  digitalWrite(2,1);
   analogWrite(3,255);
-  
+  gkalibrate();
   tft.init(240, 240);   // initialize a ST7789 chip, 240x240 pixels
+  tft.setTextWrap(false);
   tft.setRotation(3);
   tft.fillScreen(BLACK);
   ss.begin(GPSBaud);
@@ -436,12 +442,11 @@ void gpsstatus(){
   tft.setCursor(-10, 180);
   tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));tft.print("   ");
   }
-
 void voltstatus(){
   
 
     if (first){
-      tft.fillRect(0,1,239,123,WHITE);
+      tft.fillRect(0,1,239,127,WHITE);
       x1=analogRead(A1)/8;
       first=0;
       for (xac=0;xac<10;xac++){
@@ -468,31 +473,75 @@ void voltstatus(){
     tft.setCursor(-10, 135);
     tft.print(" Boardspannung:");tft.print((xav[0]+xav[1]+xav[2]+xav[3]+xav[4]+xav[5]+xav[6]+xav[7]+xav[8]+xav[9])/64.0,1);tft.print("V");  // Gebe durchschnittsspannung an
     tft.setCursor(-10, 155);
-    tft.print(" Spannungsmaxi:");tft.print(xmax/6.4,1);tft.print("V ");xmax=0;
+    tft.print(" Spannungsmaxi:");tft.print(xmax/6.4,1);tft.print("V   ");
     tft.setCursor(-10, 175);
-    tft.print(" Spannungsmini:");tft.print(xmin/6.4,1);tft.print("V ");xmin=255;
+    tft.print(" Spannungsmini:");tft.print(xmin/6.4,1);tft.print("V   ");
+    tft.setCursor(-10, 195);
+    tft.print(" Spannungsdiff:");tft.print((xmax-xmin)/6.4,1);tft.print("V   ");
+    xmax=0;xmin=255;
   }
   
   
+  }
+void Gstatus(){
+  byte kali;
+  if (!digitalRead(0)){ gkalibrate();tft.fillScreen(BLACK);}
+  tft.fillCircle(-gy*50+100,-gx*50+100,2,0B0001100001100011);
+  tft.fillCircle(220,gz*50+100,2,0B0000100000100001);
+  tft.drawFastVLine(100,0,200,WHITE);
+  tft.drawFastVLine(220,0,200,WHITE);
+  tft.drawFastHLine(0,100,240,WHITE);
+  tft.drawFastHLine(210,150,20,WHITE);
+  tft.drawFastHLine(210,50,240,WHITE);
+  tft.drawCircle(100,100,100,WHITE);
+  tft.drawCircle(100,100,50,WHITE);
+  gx=0;gy=0;gz=0;
+  //for (kali=0;kali<10;kali++){
+  gx+=analogRead(A0);
+  gy+=analogRead(A1);
+  gz+=analogRead(A2);
+  //}
+  //gx/=10;gy/=10;gz/=10;
+  gx=gx*0.0061-2.0625-gkx;
+  gy=gy*0.0061-2.0625-gky;
+  gz=gz*0.0061-2.0625-gkz;
+  
+  
+  tft.fillCircle(-gy*50+100,-gx*50+100,2,RED);
+  tft.fillCircle(220,gz*50+100,2,RED);
+
+    tft.setTextColor(WHITE, BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(-10, 205);
+    tft.print(" G.B:");tft.print(gx,1);tft.print(" ");
+    tft.setCursor(-10, 225);
+    tft.print(" G.S:");tft.print(gy,1);tft.print(" ");
+    tft.setCursor(120, 205);
+    tft.print("G.F:");tft.print(gz,1);tft.print(" ");
+
+  }
+void gkalibrate(){
+  float kali=0;
+  for(kali=1;kali<100;kali++){
+    gkx+=analogRead(A0);
+    gky+=analogRead(A1);
+    gkz+=analogRead(A2);
+    }
+  gkx/=100;
+  gky/=100;
+  gkz/=100;
+  gkx=gkx*0.0061-2.0625;gky=gky*0.0061-2.0625;gkz=gkz*0.0061-3.0625;
   }
 void loop() {
 // Menu1
 
   if (menu==1) startbildschirm();
   if (menu==2) gpsstatus();
-  if (menu==0) voltstatus();
+  if (menu==3) voltstatus();
+  if (menu==0) Gstatus();
  /* showInnen();
   showgf();
   showTime();
   showGPS();
   showTemp();*/
 }
-/*
- * hier die Befehle, die noch eingepflegt werden müssen
- *   printFloat(gps.altitude.meters(), gps.altitude.isValid(), 7, 2);
-     printFloat(gps.course.deg(), gps.course.isValid(), 7, 2);
-     printFloat(gps.speed.kmph(), gps.speed.isValid(), 6, 2);
- * 
- * 
- * 
- */
