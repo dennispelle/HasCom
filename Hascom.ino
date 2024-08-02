@@ -1,6 +1,11 @@
-/*Initialisire gpsmodul
- * 
- */
+
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 10
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+
+
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 // The TinyGPS++ object
@@ -29,6 +34,7 @@ double uMin,uMax,uMinabs=1023,uMaxabs,uAvr,uNow,uRip,uRipabs;
 void setup() {
   ss.begin(GPSBaud);
   lcd.begin(8, 2);
+  sensors.begin();
 
 }
 void lcdclean(){ // LcdBildschirm Löschen
@@ -101,8 +107,8 @@ void showClock(){
     lcdclean();  
 // Kein Datum nur die Uhrzeit   
     lcd.setCursor(0,0);    
-    lcd.print("Uhrzeit:");
-/*    
+  //  lcd.print("Uhrzeit:");
+   
     if (tag<10) lcd.print("0");
     lcd.print(tag); lcd.print(".");
     
@@ -110,7 +116,7 @@ void showClock(){
     lcd.print(monat);lcd.print(".");
         
     lcd.print(jahr);
-    */
+ 
     lcd.setCursor(1, 1); 
 //  lcd.setCursor(0,1); //falls sekunden angezeigt werden sollen
     if (stunde<10) lcd.print("0");
@@ -150,12 +156,23 @@ void showVolt(){
   lcd.setCursor(0,1);
   lcd.print("Ud=");lcd.print(uRip);lcd.print("V");
   }
+void showTemp(){
+  lcdclean();
+  lcd.setCursor(0,0);
+  lcd.print("T1=");lcd.print(sensors.getTempCByIndex(0));
+  lcd.setCursor(0,1);
+  lcd.print("T2=");lcd.print(sensors.getTempCByIndex(1));
+}
 void loop() {
+  sensors.requestTemperatures();// Hole Temperaturen der Tempsensoren
+ 
   showClima();
-  delay(1000);
+  delay(2000);
   showClock();
-  delay(1000);
+  delay(2000);
   getVolt();
   showVolt();
-  delay(1000);
+  delay(2000);
+  showTemp();
+  delay(2000);
 }
