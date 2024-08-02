@@ -21,6 +21,7 @@ SoftwareSerial ss(RXPin, TXPin);
 #include <SimpleDHT.h>
 byte temperature = 0;
 byte humidity = 0; 
+float T1,T2;
 int err;  
 SimpleDHT11 dht11(2);
 
@@ -29,13 +30,20 @@ SimpleDHT11 dht11(2);
  */
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(3,4,5,6,7,8);
-byte jahr,monat,tag,stunde,mimute,sekunde,zeitzone;//Zeitzone für sommer/winterzeit usw
-byte Menu;
+byte jahr,monat,tag,stunde,mimute,sekunde,zeitzone  ;//Zeitzone für sommer/winterzeit usw
+byte Menu,Nightlight,Daylight;
 byte L,M,R;
 double uMin,uMax,uMinabs=1023,uMaxabs,uAvr,uNow,uRip,uRipabs;
+
+
+
 void setup() {
-  
+
+  digitalWrite(13,HIGH);
+  pinMode(9,OUTPUT);
   EEPROM.get(0, Sommerzeit);
+  EEPROM.get(1, Daylight);
+  EEPROM.get(2, Nightlight);
   zeitzone=1+Sommerzeit;
   digitalWrite(A1,HIGH);
   digitalWrite(A2,HIGH);
@@ -46,26 +54,17 @@ void setup() {
   sensors.begin();
 
 }
-void lcdclean(){ // LcdBildschirm Löschen
- /* lcd.setCursor(0,0);
-  lcd.print("        ");
-  lcd.setCursor(0,1);
-  lcd.print("        ");
-  */}
 void getTemp(){ // Hole die Tempereatur und die Luftfeuchtigkeit und speichere sie in Var: temperature und humidity
    err = dht11.read(&temperature, &humidity, NULL);
   }
 void showClima(){// Zeige Temperatur und Luftfeuchte im Fahrzeug an
-  if(((millis()/1000)%10)==0)sensors.requestTemperatures();// Hole Temperaturen der Tempsensoren
-  lcdclean();
-  getTemp();
   lcd.setCursor(0,0);
  
   lcd.print((int)temperature);
   lcd.print("C bei ");
   lcd.setCursor(0,1);
   lcd.print((int)humidity);
-  lcd.print("% rel ");
+  lcd.print("% r.Lf");
   }
 void getClock(){
     while (ss.available() > 0)
@@ -114,7 +113,7 @@ void getClock(){
 }
 void showClock(){
   getClock();
-    lcdclean();  
+  
 // Kein Datum nur die Uhrzeit   
     lcd.setCursor(0,0);    
   //  lcd.print("Uhrzeit:");
@@ -163,26 +162,69 @@ void getVolt(){
   }
 void showVolt(){
   getVolt();// Messe Boardspannung
-  lcdclean();
   lcd.setCursor(0,0);
   lcd.print("Um=");lcd.print(uAvr);lcd.print("V");
   lcd.setCursor(0,1);
   lcd.print("Ud=");lcd.print(uRip);lcd.print("V");
   }
 void showTemp(){
-  
-  lcdclean();
+  if((millis()/1000)%5){
+  T1=sensors.getTempCByIndex(0);
+  T2=sensors.getTempCByIndex(1);
   lcd.setCursor(0,0);
-  lcd.print("T1=");lcd.print(sensors.getTempCByIndex(0));
+  lcd.print("T1=");lcd.print(T1);
   lcd.setCursor(0,1);
-  lcd.print("T2=");lcd.print(sensors.getTempCByIndex(1));
+  lcd.print("T2=");lcd.print(T2);}
 }
+void setNightlight(){
+    lcd.setCursor(0,0);
+    lcd.print("LCD Nacht");
+    lcd.setCursor(0,1);
+    lcd.print("        ");
+    while (digitalRead(A2)){
+      lcd.setCursor(2,1);
+      if ((Nightlight/2.55)<100) lcd.print(" ");
+      lcd.print(Nightlight/2.55);
+      lcd.print("%");
+      if (!digitalRead(A1)){ Nightlight--;delay(50);}
+      if (!digitalRead(A3)){ Nightlight++;delay(50);}
+      analogWrite(9,Nightlight);
+      }
+      EEPROM.put(2, Nightlight);
+    
+  }
+void setDaylight(){
+    lcd.setCursor(0,0);
+    lcd.print("LCD  Tag");
+    lcd.setCursor(0,1);
+    lcd.print("        ");
+    while (digitalRead(A2)){
+      lcd.setCursor(2,1);
+      if ((Nightlight/2.55)<100) lcd.print(" ");
+      lcd.print(Nightlight/2.55);
+      lcd.print("%");
+      if (!digitalRead(A1)){ Daylight--;delay(50);}
+      if (!digitalRead(A3)){ Daylight++;delay(50);}
+      analogWrite(9,Daylight);
+      }
+      EEPROM.put(1,Daylight);
+    
+  }
+
 byte getButton(){
   byte doit=0;
   unsigned long timer=millis();
-  if (!digitalRead(A2)){
+if ((!digitalRead(A3))&&(millis()-timer>2000)){
+    lcd.setCursor(0,1);
+    lcd.print("Tag%????");
+    }
+  if (!digitalRead(A2)&&(millis()-timer>2000)){
     lcd.setCursor(0,1);
     lcd.print("So/Wi? ");
+    }
+  if (!digitalRead(A1)&&(millis()-timer>2000)){
+    lcd.setCursor(0,1);
+    lcd.print("Nacht%???");
     }
   while(!digitalRead(A2)){
     
@@ -197,18 +239,23 @@ byte getButton(){
   while (!digitalRead(A1)or!digitalRead(A3)){
       if (digitalRead(A1))L=0; else {L=1;doit=64;}
       if (digitalRead(A3))M=0; else {M=1;doit=192;}
-      
+      if ((!digitalRead(A1))&&((millis()-timer)>5000)){setDaylight();break;}
+      if ((!digitalRead(A3))&&((millis()-timer)>5000)){setNightlight();break;}
     }
     return doit; 
   }
-void goRound(){
-  
-  //Rotation der Menüs
-  }
+
   
 void loop() { 
-  Menu+=getButton();
-    
+    if((millis()/1000)%5){
+      T1=sensors.getTempCByIndex(0);}
+      if((millis()/1000+3)%5){
+      T2=sensors.getTempCByIndex(1);}
+      getTemp();
+    Menu+=getButton();
+    if (digitalRead(13)) analogWrite(9,Nightlight); 
+    else analogWrite(9,Daylight);
+   
     
     if (Menu==0)showClock();
     if (Menu==64)showClima();
