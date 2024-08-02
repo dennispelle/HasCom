@@ -140,7 +140,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
 
   tft.setCursor(140,120);
   tft.setTextSize(3);
-  tft.print("12,5"); tft.setTextColor(RED, BLACK);tft.print("V");
+  tft.print(analogRead(A6)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
  
 }
 String monat(byte t){//konvertiert eine zahl in einen String 
@@ -185,42 +185,35 @@ String monat(byte t){//konvertiert eine zahl in einen String
 }
 String wochentag(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
-    case 3:  
+    case 1:  
       return "Montag    ";
     break;
-    case 4:  
+    case 3:  
       return "Dienstag  ";
     break;
-    case 5:
+    case 4:
       return "Mittwoch  ";
     break;   
-    case 6:
+    case 5:
       return "Donnerstag";
     break;   
-    case 7:
+    case 6:
       return "Freitag   ";
     break;   
-    case 1:
+    case 7:
       return "Samstag   ";
     break;
     case 2:
-      return "Sonntag   ";
+      return "Son°tag   ";
     break;
   }  
 }
-void showTemp(){//Zeige die Temperaturen der Aussensensoren an
-  tft.setCursor(2, 62);   tft.setTextColor(WHITE, BLACK);   tft.setTextSize(2);
-  tft.print("T1=");   tft.print(T1,1);    tft.print(char(0xF7));    tft.print("C");
-  
-  tft.setCursor(2, 82);   tft.setTextColor(WHITE, BLACK);   tft.setTextSize(2);
-  tft.print("T2=");   tft.print(T2,1);    tft.print(char(0xF7));    tft.print("C");
-  }
 void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie 
   while (ss.available() > 0)
     if (gps.encode(ss.read()));
     
       gjahr=gps.date.year();
-      //gjahr-=2000;
+      
 
       gmonat = gps.date.month();
       gtag = gps.date.day();
@@ -232,9 +225,9 @@ void getGpsClock() { //Hole die Zeit über das GPSmodul und korrigiere Sie
   gminute = gps.time.minute();
   gsekunde = gps.time.second();
   if (gstunde+gsekunde+gminute){gpst=1;gpstn++;}else gpst=0;
-  gstunde = gstunde + zeitzone;
+  gstunde = gstunde + zeitzone+Sommerzeit;
   gstunde = gstunde % 24;
-  if (gstunde < zeitzone){ //Zeitkorrektur
+  if (gstunde < (zeitzone+Sommerzeit)){ //Zeitkorrektur
     gtag++;
     if (gtag == 32) {
       gtag = 1;   //wenn der monat 32tage hat
@@ -314,95 +307,7 @@ void getbatday(){// Hole das datum aus dem Batteriemodul
     gmonat=tm.Month;
     gjahr=tmYearToCalendar(tm.Year);//-2000;
   }
-void showTime() {// stelle die Zeit dar
-  getGpsClock();
-  if (!gpst) getbatclock(); //schau ob die GPSzeit stimmt, wenn nicht hol die Zeit aus der Uhr
-  if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
-  tft.setCursor(150, 193);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  if (gstunde < 10)tft.print("0"); tft.print(gstunde); 
-  tft.print(":"); 
-  if (gminute < 10) tft.print("0"); tft.print(gminute);
-
-  tft.setCursor(130, 218);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2 );
-
-  if (gtag < 10) tft.print("0"); tft.print(gtag); 
-  tft.print(":"); 
-  if (gmonat < 10) tft.print("0"); tft.print(gmonat);
-  tft.print(":"); 
-  if (gjahr < 10) tft.print("0"); tft.print(gjahr);
-}
-void showInnen() {//stelle die Innentemperatur und die Luftfeuchte dar
-  getTemp();
-  tft.setCursor(5, 193);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("T.i:");
-  tft.print(temperature);
-  tft.print(char(0xF7));
-  tft.print("C");
-  tft.setCursor(5, 218);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("H.i: ");
-  tft.print(humidity);
-  tft.print("%");
-
-}
-void showGPS() { //Zeige die GPSdaten an, so
-  tft.setCursor(2, 2);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("S");
-  tft.print(gps.satellites.value());
-  tft.print(" ");
-  if (gps.location.isValid())
-  {
-    tft.print(gps.location.lat(), 6);
-    tft.print(",");
-    tft.print(gps.location.lng(), 6);
-  }
-  else
-  {
-    tft.print("XXXXXXXXXXXXXXXX");
-  }
-}
-void getGf() {//Miss die Gkräfte und korrigiere sie
-  byte c;
-  gx = 0;
-  gy = 0;
-
-
-  gx += analogRead(A0);
-  gy += analogRead(A1);
-
-
-  gx *= 5 / 1023.0;
-  gy *= 5 / 1023.0;
-  gx -= 1.8;
-  gy -= 1.8;
-  gx /= 0.9;
-  gy /= 0.9;
-
-
-}
-void showgf(){//stelle die Gkräfte dar
-  getGf();
-  tft.setCursor(2, 22);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("G=");
-  tft.print(gx);
-  tft.setCursor(2, 42);
-  tft.setTextColor(WHITE, BLACK);
-  tft.setTextSize(2);
-  tft.print("S="); tft.print(gy);
-  tft.setCursor(2, 62);
-}
-void setup(void) {
+void setup(void){// Setupfunktion, Initialisieren von Sensoren, Auslesen des Speichers usw.
   EEPROM.get(0, Sommerzeit);
   EEPROM.get(1, Daylight);
   EEPROM.get(2, Nightlight);
@@ -425,12 +330,12 @@ void setup(void) {
   //drawFrame();
 
 }
-void refresh(){
+void refresh(){// Bildschirm löschen
   tft.fillScreen(BLACK);
   first=1;
   px=1;
   }
-void gpsstatus(){
+void gpsstatus(){// Funktionsbildschirm für GPS, zeigt Satelitenanzahl, Koordinaten, Geschwindigkeit usw an
    while (ss.available() > 0)
     if (gps.encode(ss.read())); 
   tft.setTextColor(WHITE, BLACK);
@@ -452,7 +357,7 @@ void gpsstatus(){
   tft.setCursor(-10, 180);
   tft.print(" R: "); tft.print(gps.course.deg(),0);tft.print(char(0xF7));tft.print("   ");
   }
-void voltstatus(){
+void voltstatus(){// Oszifunktion :)
   
 
     if (first){
@@ -467,7 +372,7 @@ void voltstatus(){
   if (px==1)  tft.drawFastVLine(0,1,127,WHITE); 
   tft.drawFastVLine(px,1,127,WHITE);                  //Radieren für neue Messewerte
   
-  x2=analogRead(A1)/8;                                //neue Messnung
+  x2=analogRead(A6)/8;                                //neue Messnung
   xav[xac]=x2;                                        //Messung ins Variablen Array packen, für Durchschnitsberechnung
   xac++;                                              //Arraycounter +1
   if (x2>xmax)xmax=x2;                                //Verlgeich ob höchster je gemessener Wert überschritten wurde
@@ -493,7 +398,7 @@ void voltstatus(){
   
   
   }
-void Gstatus(){
+void Gstatus(){// Gmeter like Gran Tourismo!
   byte kali;
   if (!digitalRead(0)){ gkalibrate();tft.fillScreen(BLACK);}
   tft.fillCircle(-gy*50+100,-gx*50+100,2,0B0001100001100011);
@@ -530,7 +435,7 @@ void Gstatus(){
     tft.print("G.F:");tft.print(gz,1);tft.print(" ");
 
   }
-void gkalibrate(){
+void gkalibrate(){// Gsensor Kalibrieren//
   float kali=0;
   for(kali=1;kali<100;kali++){
     gkx+=analogRead(A0);
@@ -542,7 +447,7 @@ void gkalibrate(){
   gkz/=100;
   gkx=gkx*0.0061-2.0625;gky=gky*0.0061-2.0625;gkz=gkz*0.0061-3.0625;
   }
-void tempstatus(){
+void tempstatus(){// Temperaturdiagramm
   byte counter;
     if (first){
       tft.setTextColor(WHITE);
@@ -615,8 +520,7 @@ void tempstatus(){
   }                                         
 
   }
-
-void option(){
+void option(){//Optionsmenu um Helligkeiten Sommer und Winterzeit einzustellen
    byte omenu=1;
    boolean out=0;
     tft.setTextColor(WHITE, BLACK);
@@ -699,9 +603,8 @@ void loop() {
   if (menu==3) voltstatus();
   if (menu==4) Gstatus();
   if (menu==5) tempstatus();
-  if (menu==6) option();
-  
-  analogWrite(3,Daylight);
+  if (menu==6) option();  
+  if (analogRead(A7)>500) analogWrite(3,Nightlight);else analogWrite(3,Daylight);
  /* showInnen();
   showgf();
   showTime();
