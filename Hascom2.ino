@@ -12,6 +12,10 @@
   Ö is 0x99
   Ü is 0x9A
  *************************************************** */
+// EEPROM zur Speicherung der Sommer/Winterzeit und der Helligkeitseinstellungen
+#include <EEPROM.h>
+boolean Sommerzeit; 
+byte Nightlight,Daylight;
  /* Temperatursensoren  XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX*/
 #include <DallasTemperature.h>
 #define ONE_WIRE_BUS 4
@@ -53,7 +57,7 @@ bool gpst=0,gpsd=0,savetime=1;
 
 // variablendefinition
 float gx,gy,gz,gkx,gky,gkz; // fließkommzahl für die G-Kräfte
-byte menu=5; // Menu Variable.
+byte menu=1; // Menu Variable.
 
   boolean first=1; //Hilfsvariable 
   byte x1,x2,px=1,xmax,xmin,xac;
@@ -399,11 +403,16 @@ void showgf(){//stelle die Gkräfte dar
   tft.setCursor(2, 62);
 }
 void setup(void) {
+  EEPROM.get(0, Sommerzeit);
+  EEPROM.get(1, Daylight);
+  EEPROM.get(2, Nightlight);
+
+  
   pinMode(3,OUTPUT);
   digitalWrite(0,1);
   digitalWrite(1,1);
   digitalWrite(2,1);
-  analogWrite(3,255);
+  
   gkalibrate();
   tft.init(240, 240);   // initialize a ST7789 chip, 240x240 pixels
   tft.setTextWrap(false);
@@ -606,16 +615,93 @@ void tempstatus(){
   }                                         
 
   }
+
+void option(){
+   byte omenu=1;
+   boolean out=0;
+    tft.setTextColor(WHITE, BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(-10, 10);
+    if(Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit ");
+    tft.setCursor(-10, 40);
+    tft.print(" Helligk.-Tag  :");tft.print(Daylight);
+    tft.setCursor(-10, 70);
+    tft.print(" Helligk.-Nacht:");tft.print(Nightlight);
+    tft.setCursor(-10, 100);
+    tft.print(" Exit");
+    
+    if (!digitalRead(0)){
+      out=1;
+      while (!digitalRead(0));
+      while (out){
+       
+        if (!digitalRead(2)){omenu++;}
+        if (!digitalRead(1)){omenu--;}
+        if(omenu>4)omenu=1;
+        if(omenu<1)omenu=4;
+          
+            if (omenu==1)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
+            tft.setCursor(-10, 10);
+            if (Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit ");
+            if (omenu==2)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
+            tft.setCursor(-10, 40);
+            tft.print(" Helligk.-Tag  :");tft.print(Daylight);tft.print("  ");
+            if (omenu==3)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK); 
+            tft.setCursor(-10, 70);
+            tft.print(" Helligk.-Nacht:");tft.print(Nightlight);tft.print("  ");
+            if (omenu==4)tft.setTextColor(BLACK, WHITE);else tft.setTextColor(WHITE, BLACK);
+            tft.setCursor(-10, 100);
+            tft.print(" Exit");
+          if (!digitalRead(0)) if (omenu==4){out=0;while(!digitalRead(0));}// user wählt EXIT
+          if (!digitalRead(0)) if (omenu==1){
+                                              Sommerzeit=!Sommerzeit;
+                                              tft.setTextColor(BLACK,YELLOW); 
+                                              tft.setCursor(-10, 10);
+                                              if (Sommerzeit) tft.print(" Sommerzeit ");   else tft.print(" Winterzeit "); 
+                                              EEPROM.put(0,Sommerzeit); while(!digitalRead(0));
+                                              }// user wechselt SommerWinterzeit
+                                              
+          if (!digitalRead(0)) if (omenu==2){while(!digitalRead(0));while(digitalRead(0)){  
+                tft.setTextColor(BLACK,YELLOW); 
+                tft.setCursor(-10, 40);
+                tft.print(" Helligk.-Tag  :");
+                tft.print(Daylight);
+                tft.print("  ");
+                if (!digitalRead(1))if (Daylight<255)Daylight++;
+                if (!digitalRead(2))if (Daylight > 0)Daylight--;
+                analogWrite(3,Daylight);
+                }
+                EEPROM.put(1,Daylight);
+            }
+           if (!digitalRead(0)) if (omenu==3){while(!digitalRead(0));while(digitalRead(0)){  
+                tft.setTextColor(BLACK,YELLOW); 
+                tft.setCursor(-10, 70);
+                tft.print(" Helligk.-Nacht:");
+                tft.print(Nightlight);
+                tft.print("  ");
+                if (!digitalRead(1))if (Nightlight<255)Nightlight++;
+                if (!digitalRead(2))if (Nightlight> 0)Nightlight--;
+                analogWrite(3,Nightlight);
+                }
+                EEPROM.put(2,Nightlight);
+            }
+          }
+        }   
+      }
+  
 void loop() {
 // Menu1
   if (!digitalRead(2)){menu++;refresh();}
   if (!digitalRead(1)){menu--;refresh();}
-  if (menu==0) menu=5; else if (menu==6) menu=1;
+  if (menu==0) menu=6; else if (menu==7) menu=1;
   if (menu==1) startbildschirm();
   if (menu==2) gpsstatus();
   if (menu==3) voltstatus();
   if (menu==4) Gstatus();
   if (menu==5) tempstatus();
+  if (menu==6) option();
+  
+  analogWrite(3,Daylight);
  /* showInnen();
   showgf();
   showTime();
