@@ -18,7 +18,7 @@
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 unsigned long timesincerequest=0;
-float T1,T2;
+float T1,T2,Ta1,Ta2,T1m,T2m;
 #include <SimpleDHT.h>
 byte temperature = 0;
 byte humidity = 0; 
@@ -53,7 +53,7 @@ bool gpst=0,gpsd=0,savetime=1;
 
 // variablendefinition
 float gx,gy,gz,gkx,gky,gkz; // fließkommzahl für die G-Kräfte
-byte menu; // Menu Variable.
+byte menu=5; // Menu Variable.
 
   boolean first=1; //Hilfsvariable 
   byte x1,x2,px=1,xmax,xmin,xac;
@@ -310,11 +310,6 @@ void getbatday(){// Hole das datum aus dem Batteriemodul
     gmonat=tm.Month;
     gjahr=tmYearToCalendar(tm.Year);//-2000;
   }
-void drawFrame() {//male einen Rahmen aufs display
- // tft.drawFastHLine(0, 190, 240, BLACK);
- // tft.drawFastHLine(0, 80, 240, BLACK);
-  tft.drawFastVLine(230, 0, 240, RED);
-}
 void showTime() {// stelle die Zeit dar
   getGpsClock();
   if (!gpst) getbatclock(); //schau ob die GPSzeit stimmt, wenn nicht hol die Zeit aus der Uhr
@@ -416,10 +411,16 @@ void setup(void) {
   tft.fillScreen(BLACK);
   ss.begin(GPSBaud);
   sensors.begin();
+  sensors.requestTemperatures();
   
   //drawFrame();
 
 }
+void refresh(){
+  tft.fillScreen(BLACK);
+  first=1;
+  px=1;
+  }
 void gpsstatus(){
    while (ss.available() > 0)
     if (gps.encode(ss.read())); 
@@ -462,7 +463,7 @@ void voltstatus(){
   xac++;                                              //Arraycounter +1
   if (x2>xmax)xmax=x2;                                //Verlgeich ob höchster je gemessener Wert überschritten wurde
   if (x2<xmin)xmin=x2;                                //Vergleich ob geringster je gemessener Wert Unterschritten wurde
-  tft.drawLine(px-1,x1,px,x2,RED);                    //Zeichne eine Line vom letzten zum aktuellen Messwert
+  tft.drawLine(px-1,127-x1,px,127-x2,RED);                    //Zeichne eine Line vom letzten zum aktuellen Messwert
   x1=x2;                                              //Neuer Messwert in die Ablage für den Alten
   px++;                                               //Positionszähler eins aufadieren.
   if (px>239)px=1;                                    //Wenn Positionszähler größer als Bildschirm, von vorn beginnen
@@ -471,7 +472,7 @@ void voltstatus(){
     tft.setTextColor(WHITE, BLACK);
     tft.setTextSize(2);
     tft.setCursor(-10, 135);
-    tft.print(" Boardspannung:");tft.print((xav[0]+xav[1]+xav[2]+xav[3]+xav[4]+xav[5]+xav[6]+xav[7]+xav[8]+xav[9])/64.0,1);tft.print("V");  // Gebe durchschnittsspannung an
+    tft.print(" Boardspannung:");tft.print((xav[0]+xav[1]+xav[2]+xav[3]+xav[4]+xav[5]+xav[6]+xav[7]+xav[8]+xav[9])/64.0,1);tft.print("V  ");  // Gebe durchschnittsspannung an
     tft.setCursor(-10, 155);
     tft.print(" Spannungsmaxi:");tft.print(xmax/6.4,1);tft.print("V   ");
     tft.setCursor(-10, 175);
@@ -532,13 +533,89 @@ void gkalibrate(){
   gkz/=100;
   gkx=gkx*0.0061-2.0625;gky=gky*0.0061-2.0625;gkz=gkz*0.0061-3.0625;
   }
+void tempstatus(){
+  byte counter;
+    if (first){
+      tft.setTextColor(WHITE);
+    tft.setTextSize(1);
+    
+      tft.fillRect(0,1,239,161,WHITE);
+      first=0;
+      for (counter=1;counter<8;counter++){tft.drawFastHLine(0,20*counter+1,240,BLACK);
+      if (counter==7){tft.drawFastHLine(0,20*counter+2,240,BLACK);tft.drawFastHLine(0,20*counter,240,BLACK);}}
+      for (counter=1;counter<6;counter++){
+        tft.drawFastVLine(counter*40,1,161,BLACK);
+        
+        
+        tft.setCursor(40*counter-10, 165);
+        tft.print(counter*2);
+        tft.print("min");
+      }
+      T1=141-sensors.getTempCByIndex(0);
+      T2=141-sensors.getTempCByIndex(1);
+      timesincerequest=millis();  
+      }
+    
+  if ((timesincerequest+2500)<millis()){
+    Ta1=T1;
+    Ta2=T2;
+    T1=141-sensors.getTempCByIndex(0);
+    T2=141-sensors.getTempCByIndex(1);
+    sensors.requestTemperatures(); 
+    timesincerequest=millis();   
+    if (px>238)px=1; else px++;  
+
+
+  if (px==1)  tft.drawFastVLine(0,1,161,WHITE);
+  else if (!(px%40)) tft.drawFastVLine(px,1,161,BLACK);
+  else  tft.drawFastVLine(px,1,161,WHITE);                  //Radieren für neue Messewerte
+  
+    for (counter=1;counter<8;counter++){
+      tft.drawPixel(px,counter*20+1,BLACK);
+      if (counter==7){tft.drawPixel(px,counter*20+2,BLACK);tft.drawPixel(px,counter*20,BLACK);}
+    }          
+  tft.drawFastVLine(px+1,1,161,GREEN);  
+  tft.drawLine(px-1,Ta2,px,T2,RED);
+  tft.drawLine(px-1,Ta1,px,T1,BLUE); //Zeichne eine Line vom letzten zum aktuellen Messwert
+    
+    tft.setTextColor(BLUE, BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(-10, 185);
+    tft.print(" AussenTemp:");tft.print((141-T1));tft.print(char(0xF7));tft.print("C  ");  // Gebe durchschnittsspannung an
+    tft.setCursor(-10, 205);
+    tft.setTextColor(RED, BLACK);
+    tft.print(" MotorTemp :");tft.print((141-T2));tft.print(char(0xF7));tft.print("C  ");
+    tft.setCursor(-10, 225);
+    tft.setTextColor(WHITE, BLACK);
+    tft.print(" Tempdiff. :");tft.print(abs(T1-T2));tft.print(char(0xF7));tft.print("C  ");
+    
+    tft.setTextColor(BLACK);
+    tft.setTextSize(1);
+    tft.setCursor(205, 13);
+    tft.print("100");tft.print(char(0xF7));tft.print("C");
+    
+    tft.setCursor(211, 53);
+    tft.print("80");tft.print(char(0xF7));tft.print("C");
+   
+    tft.setCursor(211, 93);
+    tft.print("40");tft.print(char(0xF7));tft.print("C");
+
+    tft.setCursor(211, 133);
+    tft.print(" 0");tft.print(char(0xF7));tft.print("C");
+
+  }                                         
+
+  }
 void loop() {
 // Menu1
-
+  if (!digitalRead(2)){menu++;refresh();}
+  if (!digitalRead(1)){menu--;refresh();}
+  if (menu==0) menu=5; else if (menu==6) menu=1;
   if (menu==1) startbildschirm();
   if (menu==2) gpsstatus();
   if (menu==3) voltstatus();
-  if (menu==0) Gstatus();
+  if (menu==4) Gstatus();
+  if (menu==5) tempstatus();
  /* showInnen();
   showgf();
   showTime();
