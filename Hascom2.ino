@@ -101,23 +101,12 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   if (!gpsd) getbatday(); // nochmal das gleiche mit dem Tag
   if ((first)||(gminute!=ominute)){// schau, ob das Bild aktualisiert werden muss
       ominute=gminute;
-  // Uhrzeit, Stunde:Minute
-        printStartTimeHour();
-        
-        // Wochentag Mittig
-        tft.setTextSize(3 );
-        tft.setCursor(-10,60);
-        tft.print(" ");
-        wochentag();
   
-        tft.setCursor(-10, 90);
-        tft.print(" "); 
-        if (gtag < 10) tft.print("0"); tft.print(gtag); 
-        tft.print("."); 
-        monat(gmonat);
-        tft.setCursor(-10, 120);
-        tft.print(" "); 
-        if (gjahr < 10) tft.print("0"); tft.print(gjahr);
+        printStartTimeHour();
+        printStartWeekday();
+        printStartDateMonth();
+        printStartYear();
+
         }
   //tft.setCursor(150,60);tft.print(millis()%10);
 // Zeige das Raumklima an
@@ -172,7 +161,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
   tft.print(analogRead(A3)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
   first=0;
 }
-void printStartTimeHour(){
+void printStartTimeHour(){// Uhrzeit, Stunde:Minute
     // Uhrzeit, Stunde:Minute
         tft.setCursor(-30, 5);
         tft.setTextColor(WHITE, BLACK);
@@ -182,6 +171,24 @@ void printStartTimeHour(){
         tft.print(":"); 
         if (gminute < 10) tft.print("0"); tft.print(gminute);
   
+  }
+void printStartWeekday(){// Wochentag Mittig
+        tft.setTextSize(3 );
+        tft.setCursor(-10,60);
+        tft.print(" ");
+        wochentag();
+  }
+void printStartDateMonth(){
+        tft.setCursor(-10, 90);
+        tft.print(" "); 
+        if (gtag < 10) tft.print("0"); tft.print(gtag); 
+        tft.print("."); 
+        monat(gmonat);
+  }
+void printStartYear(){  
+        tft.setCursor(-10, 120);
+        tft.print(" "); 
+        if (gjahr < 10) tft.print("0"); tft.print(gjahr);
   }
 void monat(byte t){//konvertiert eine zahl in einen String 
   switch (t) {
