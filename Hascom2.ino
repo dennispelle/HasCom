@@ -156,7 +156,7 @@ void startbildschirm(){// Startbildschirm, Zeigt die Uhrzeit und das Datum Groß
 
   tft.setCursor(140,120);
   tft.setTextSize(3);
-  tft.print(analogRead(A6)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
+  tft.print(analogRead(A3)/1023.0*20.0,1); tft.setTextColor(RED, BLACK);tft.print("V  ");
   first=0;
 }
 String monat(byte t){//konvertiert eine zahl in einen String 
@@ -391,7 +391,7 @@ void voltstatus(){// Oszifunktion :)
   if (px==1)  tft.drawFastVLine(0,1,127,WHITE); 
   tft.drawFastVLine(px,1,127,WHITE);                  //Radieren für neue Messewerte
   
-  x2=analogRead(A6)/8;                                //neue Messnung
+  x2=analogRead(A3)/8;                                //neue Messnung
   xav[xac]=x2;                                        //Messung ins Variablen Array packen, für Durchschnitsberechnung
   xac++;                                              //Arraycounter +1
   if (x2>xmax)xmax=x2;                                //Verlgeich ob höchster je gemessener Wert überschritten wurde
@@ -623,7 +623,7 @@ void loop() {
   if (menu==4) Gstatus();
   if (menu==5) tempstatus();
   if (menu==6) option();  
-  if (analogRead(A7)>300) analogWrite(3,Nightlight);else if(analogRead(A7)<100) analogWrite(3,Daylight);
+  if (analogRead(A6)>300) analogWrite(3,Nightlight);else if(analogRead(A6)<100) analogWrite(3,Daylight);
  /* showInnen();
   showgf();
   showTime();
