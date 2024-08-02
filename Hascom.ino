@@ -245,7 +245,16 @@ if ((!digitalRead(A3))&&(millis()-timer>2000)){
     }
     return doit; 
   }
-
+byte getInteriorLight(){
+  byte light=0;
+  float m=0;
+  for (light=0;light<20;light++){
+    m+=digitalRead(13);
+    }
+  m/=20.0;
+  if(m<=0.5)m=1;else m=0;
+  return m;
+  }
   
 void loop() { 
     if (!(((millis()/1000)+1)%5))getTemp();
@@ -256,7 +265,7 @@ void loop() {
 
 
     Menu+=getButton();
-    if (digitalRead(13)) analogWrite(9,Nightlight); 
+    if (getInteriorLight()) analogWrite(9,Nightlight); 
     else analogWrite(9,Daylight);
    
     
